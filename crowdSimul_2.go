@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"os/exec"
 	"time"
 )
 
 const size int = 15
-const populationRate int = 5
+const populationRate int = 20
 
 func main() {
 	board := genBoard()
@@ -19,7 +18,6 @@ func main() {
 	steps := 0
 	printBoard(board)
 	for emptyRoom(board) == false {
-		clearScreen()
 		steps++
 		time.Sleep(1 * time.Second)
 		board = moveBoard(board, doorX, doorY)
@@ -161,14 +159,11 @@ func movePiece(board [size][size]int, pointX, pointY, doorX, doorY int) [size][s
 }
 
 func moveBoard(board [size][size]int, doorX, doorY int) [size][size]int {
-	moved := false
-	if moved == false {
-		for i := 0; i < size; i++ {
-			for j := 0; j < size; j++ {
-				if board[i][j] == 1 {
-					board = movePiece(board, i, j, doorX, doorY)
-					moved = true
-				}
+	auxMatrix := board
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			if auxMatrix[i][j] == 1 {
+				board = movePiece(board, i, j, doorX, doorY)
 			}
 		}
 	}
@@ -255,9 +250,4 @@ func printBoard(board [size][size]int) {
 		}
 		fmt.Println()
 	}
-}
-
-func clearScreen() {
-	// os.Stdout.WriteString("\x1b[3;J\x1b[H\x1b[2J")
-	exec.Command("clear")
 }
