@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-const size int = 15
-const populationRate int = 20
+const size int = 20
+const populationRate int = 30
 
 func main() {
 	board := genBoard()
@@ -16,14 +16,16 @@ func main() {
 	doorX := findDoor(board, "x")
 	doorY := findDoor(board, "y")
 	steps := 0
+	population := populationCount(board)
+	fmt.Printf("Population: %d\n", population)
 	printBoard(board)
 	for emptyRoom(board) == false {
 		steps++
-		time.Sleep(1 * time.Second)
+		time.Sleep(85 * time.Millisecond)
 		board = moveBoard(board, doorX, doorY)
 		printBoard(board)
 	}
-	fmt.Printf("Room successfuly evacuated in %d seconds\n", steps)
+	fmt.Printf("Successfuly evacuated %d people in %d seconds\n", population, steps)
 }
 
 func emptyRoom(board [size][size]int) bool {
@@ -64,6 +66,18 @@ func populate(board [size][size]int) [size][size]int {
 		}
 	}
 	return board
+}
+
+func populationCount(board [size][size]int) int {
+	population := 0
+	for i := 1; i < size-1; i++ {
+		for j := 1; j < size-1; j++ {
+			if board[i][j] == 1 {
+				population++
+			}
+		}
+	}
+	return population
 }
 
 func createBorder(board [size][size]int) [size][size]int {

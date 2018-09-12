@@ -6,17 +6,33 @@ import (
 	"time"
 )
 
-const width int = 30
-const height int = 10
+const width int = 100
+const height int = 25
 const spawnChance int = 20
+const populationRate int = 20
 
 func main() {
 	board := genBoard()
+	board = populate(board)
+	population := populationCount(board)
+	left := leftCount(board, 0)
+	tp := leftCount(board, 0)
+	steps := 0
+	printBoard(board)
+	time.Sleep(1 * time.Second)
 	for true {
-		board = spawn(board)
-		printBoard(board)
 		board = moveBoard(board)
-		time.Sleep(500 * time.Millisecond)
+		steps++
+		left = leftCount(board, left)
+		tp = leftCount(board, tp)
+		printBoard(board)
+		time.Sleep(800 * time.Millisecond)
+		fmt.Printf("People: %d\n", population)
+		fmt.Printf("People that left: %d\n", left)
+		fmt.Printf("People that left in the last minute: %d\n", tp)
+		if steps%60 == 0 {
+			tp = 0
+		}
 	}
 }
 
@@ -56,6 +72,41 @@ func spawn(board [height][width]int) [height][width]int {
 	return auxMatrix
 }
 
+func populationCount(board [height][width]int) int {
+	population := 0
+	for i := 1; i < height-1; i++ {
+		for j := 1; j < width-1; j++ {
+			if board[i][j] == 1 {
+				population++
+			}
+		}
+	}
+	return population
+}
+
+func leftCount(board [height][width]int, left int) int {
+	for i := 1; i < height-1; i++ {
+		if board[i][1] == 1 {
+			left++
+		}
+	}
+	return left
+}
+
+func populate(board [height][width]int) [height][width]int {
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	for i := 1; i < height-1; i++ {
+		for j := 1; j < width-1; j++ {
+			rate := r1.Intn(100)
+			if rate <= populationRate {
+				board[i][j] = r1.Intn(2)
+			}
+		}
+	}
+	return board
+}
+
 func createDoor(board [height][width]int) [height][width]int {
 	auxMatrix := board
 	for i := 1; i < height-1; i++ {
@@ -71,6 +122,7 @@ func movePiece(board [height][width]int, pointX, pointY int) [height][width]int 
 
 		if checkDoor(board, pointX, pointY) {
 			auxMatrix[pointX][pointY] = 0
+			auxMatrix[pointX][width-1] = 1
 		}
 		if checkNeighborhood(board, pointX, pointY) {
 			auxMatrix[pointX][pointY-1] = 1
@@ -121,7 +173,7 @@ func checkDoor(board [height][width]int, pointX, pointY int) bool {
 
 func printBoard(board [height][width]int) {
 	for i := 0; i < height; i++ {
-		for j := 0; j < width; j++ {
+		for j := 1; j < width; j++ {
 			if board[i][j] == 0 {
 				fmt.Printf(" -")
 			} else if board[i][j] == 1 {
