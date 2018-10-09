@@ -6,13 +6,15 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const width int = 162
-const height int = 122
-const screenScale int = 4
+const width int = 202
+const height int = 152
+const alpha float64 = 1
+const screenScale int = 5
 
 func main() {
 	board := genBoard()
 	renderBoard(board)
+	// thermalEquilibrium(board)
 }
 
 func genBoard() [height][width]float64 {
@@ -58,7 +60,7 @@ func setInitialState(board [height][width]float64) [height][width]float64 {
 }
 
 func thermalRule(board [height][width]float64, cellX, cellY int) float64 {
-	newTemp := ((4 * (board[cellX][cellY-1] + board[cellX][cellY+1] + board[cellX-1][cellY] + board[cellX+1][cellY])) + board[cellX+1][cellY-1] + board[cellX-1][cellY+1] + board[cellX-1][cellY-1] + board[cellX+1][cellY+1]) / 20
+	newTemp := alpha * (((4 * (board[cellX][cellY-1] + board[cellX][cellY+1] + board[cellX-1][cellY] + board[cellX+1][cellY])) + board[cellX+1][cellY-1] + board[cellX-1][cellY+1] + board[cellX-1][cellY-1] + board[cellX+1][cellY+1]) / 20)
 
 	return newTemp
 }
@@ -75,10 +77,12 @@ func updateBoard(board [height][width]float64) [height][width]float64 {
 
 func compareMatrix(board [height][width]float64, auxMatrix [height][width]float64) bool {
 	areEqual := true
-	for i := 1; i < height-1; i++ {
-		for j := 1; j < width-1; j++ {
-			if board[i][j] != auxMatrix[i][j] {
-				areEqual = false
+	for areEqual == true {
+		for i := 1; i < height-1; i++ {
+			for j := 1; j < width-1; j++ {
+				if board[i][j] != auxMatrix[i][j] {
+					areEqual = false
+				}
 			}
 		}
 	}
@@ -88,6 +92,7 @@ func compareMatrix(board [height][width]float64, auxMatrix [height][width]float6
 func thermalEquilibrium(board [height][width]float64) {
 	iterations := 0
 	for compareMatrix(updateBoard(board), board) != true {
+		fmt.Println(iterations)
 		iterations++
 		board = updateBoard(board)
 	}
@@ -104,31 +109,40 @@ func printBoard(board [height][width]float64) {
 }
 
 func changeColor(renderer *sdl.Renderer, color, x, y int) {
+	// --- COLOR SCALE ---
 	if color == 0 {
-		renderer.SetDrawColor(82, 228, 239, 255)
+		renderer.SetDrawColor(124, 221, 244, 255)
 	} else if color > 0 && color < 11 {
-		renderer.SetDrawColor(73, 238, 201, 255)
+		renderer.SetDrawColor(114, 243, 232, 255)
 	} else if color > 10 && color < 21 {
-		renderer.SetDrawColor(65, 237, 148, 255)
+		renderer.SetDrawColor(104, 242, 194, 255)
 	} else if color > 20 && color < 31 {
-		renderer.SetDrawColor(56, 236, 90, 255)
+		renderer.SetDrawColor(94, 241, 150, 255)
 	} else if color > 31 && color < 40 {
+		// renderer.SetDrawColor(85, 240, 101, 255)
+		// renderer.SetDrawColor(200, 230, 191, 255)
 		renderer.SetDrawColor(255, 255, 255, 255)
 	} else if color > 40 && color < 51 {
-		renderer.SetDrawColor(67, 235, 48, 255)
+		renderer.SetDrawColor(102, 239, 75, 255)
 	} else if color > 50 && color < 61 {
-		renderer.SetDrawColor(117, 234, 40, 255)
+		renderer.SetDrawColor(141, 239, 66, 255)
 	} else if color > 60 && color < 71 {
-		renderer.SetDrawColor(170, 233, 31, 255)
+		renderer.SetDrawColor(184, 238, 56, 255)
 	} else if color > 70 && color < 81 {
-		renderer.SetDrawColor(228, 232, 23, 255)
+		renderer.SetDrawColor(233, 237, 47, 255)
 	} else if color > 80 && color < 91 {
-		renderer.SetDrawColor(231, 171, 15, 255)
+		renderer.SetDrawColor(236, 187, 38, 255)
 	} else if color > 90 && color < 100 {
-		renderer.SetDrawColor(230, 103, 7, 255)
+		renderer.SetDrawColor(235, 128, 29, 255)
 	} else if color == 100 {
-		renderer.SetDrawColor(229, 30, 0, 255)
+		renderer.SetDrawColor(235, 65, 20, 255)
 	}
+
+	// --- COLOR GUESS ---
+	// red := uint8(color)
+	// blue := 100 - red
+	// renderer.SetDrawColor(red, 20, blue, 255)
+
 	renderer.DrawPoint(int32(y), int32(x))
 }
 
@@ -139,7 +153,7 @@ func renderBoard(board [height][width]float64) {
 	defer sdl.Quit()
 
 	window, err := sdl.CreateWindow("Thermal Simulation", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		int32(width), int32(height), sdl.WINDOW_FULLSCREEN_DESKTOP)
+		int32(width*screenScale), int32(height*screenScale), 0)
 	if err != nil {
 		panic(err)
 	}
@@ -151,9 +165,11 @@ func renderBoard(board [height][width]float64) {
 	}
 	defer renderer.Destroy()
 
-	renderer.SetLogicalSize(int32(width), int32(height))
+	renderer.SetScale(float32(screenScale), float32(screenScale))
 
 	renderer.Clear()
+
+	iterations := 0
 
 	running := true
 	for running {
@@ -164,7 +180,7 @@ func renderBoard(board [height][width]float64) {
 				break
 			}
 		}
-		for compareMatrix(updateBoard(board), board) != true {
+		for compareMatrix(board, updateBoard(board)) != true {
 			for i := 1; i < height-1; i++ {
 				for j := 1; j < width-1; j++ {
 					color := int(board[i][j])
@@ -173,6 +189,8 @@ func renderBoard(board [height][width]float64) {
 			}
 			renderer.Present()
 			board = updateBoard(board)
+			fmt.Println(iterations)
+			iterations++
 		}
 	}
 }
