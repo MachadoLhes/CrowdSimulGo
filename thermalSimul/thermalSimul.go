@@ -6,10 +6,10 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-const width int = 202
-const height int = 152
+const width int = 102
+const height int = 102
 const alpha float64 = 1
-const screenScale int = 5
+const screenScale int = 8
 
 func main() {
 	board := genBoard()
@@ -82,6 +82,7 @@ func compareMatrix(board [height][width]float64, auxMatrix [height][width]float6
 			for j := 1; j < width-1; j++ {
 				if board[i][j] != auxMatrix[i][j] {
 					areEqual = false
+					break
 				}
 			}
 		}
@@ -92,9 +93,9 @@ func compareMatrix(board [height][width]float64, auxMatrix [height][width]float6
 func thermalEquilibrium(board [height][width]float64) {
 	iterations := 0
 	for compareMatrix(updateBoard(board), board) != true {
-		fmt.Println(iterations)
 		iterations++
 		board = updateBoard(board)
+		fmt.Println(iterations)
 	}
 	fmt.Printf("Achieved thermal equilibrium in %d iterations\n", iterations)
 }
@@ -118,10 +119,10 @@ func changeColor(renderer *sdl.Renderer, color, x, y int) {
 		renderer.SetDrawColor(104, 242, 194, 255)
 	} else if color > 20 && color < 31 {
 		renderer.SetDrawColor(94, 241, 150, 255)
-	} else if color > 31 && color < 40 {
-		// renderer.SetDrawColor(85, 240, 101, 255)
+	} else if color > 31 && color < 41 {
+		renderer.SetDrawColor(85, 240, 101, 255)
 		// renderer.SetDrawColor(200, 230, 191, 255)
-		renderer.SetDrawColor(255, 255, 255, 255)
+		// renderer.SetDrawColor(255, 255, 255, 255)
 	} else if color > 40 && color < 51 {
 		renderer.SetDrawColor(102, 239, 75, 255)
 	} else if color > 50 && color < 61 {
@@ -173,13 +174,6 @@ func renderBoard(board [height][width]float64) {
 
 	running := true
 	for running {
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch event.(type) {
-			case *sdl.QuitEvent:
-				running = false
-				break
-			}
-		}
 		for compareMatrix(board, updateBoard(board)) != true {
 			for i := 1; i < height-1; i++ {
 				for j := 1; j < width-1; j++ {
@@ -191,6 +185,13 @@ func renderBoard(board [height][width]float64) {
 			board = updateBoard(board)
 			fmt.Println(iterations)
 			iterations++
+		}
+		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				running = false
+				break
+			}
 		}
 	}
 }
